@@ -1,125 +1,99 @@
-// Простая логика навигации, модалок и имитация отправки.
-// Настройте ссылки externalApplyUrl и modsUrl под реальные адреса.
-
-const externalApplyUrl = "https://example-form.com/apply"; // куда переходит "Подать заявку"
+// Настройте URL'ы
+const externalApplyUrl = "https://example-form.com/apply"; // куда ведёт "Подать заявку"
 const modsUrl = "https://example-filehost.com/mods";
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Навигация
-  const navBtns = document.querySelectorAll(".nav-btn[data-target]");
-  navBtns.forEach(b => b.addEventListener("click", (e) => {
+  // Навигация страниц
+  const navBtns = document.querySelectorAll(".nav-btn[data-target], .link-like[data-target]");
+  navBtns.forEach(btn => btn.addEventListener("click", (e) => {
     const target = e.currentTarget.dataset.target;
-    if (!target) return;
-    showPage(target);
-    setActiveNav(e.currentTarget);
+    if (target) navigateTo(target, e.currentTarget);
   }));
 
-  function showPage(id){
+  // Нижние кнопки с data-target
+  document.querySelectorAll(".nav-btn[data-target]").forEach(b => {
+    b.addEventListener("click", (e) => setActiveNav(e.currentTarget));
+  });
+
+  function navigateTo(id, btn) {
     document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
     const page = document.getElementById(id);
     if (page) page.classList.add("active");
+
+    if (btn && btn.classList.contains("nav-btn")) setActiveNav(btn);
+    // скролл наверх для удобства
+    window.scrollTo({top:0, behavior:"smooth"});
   }
   function setActiveNav(btn){
     document.querySelectorAll(".nav-btn").forEach(n => n.classList.remove("active"));
-    btn.classList.add("active");
+    if(btn) btn.classList.add("active");
   }
 
-  // Ссылка на моды на странице info
+  // Ссылки
   const modsLink = document.getElementById("mods-link");
-  if (modsLink) modsLink.href = modsUrl;
-
-  // Кнопка "Подать заявку" — переходит на внешний сайт
+  if(modsLink) modsLink.href = modsUrl;
   document.getElementById("apply-btn").addEventListener("click", () => {
     window.open(externalApplyUrl, "_blank", "noopener");
   });
+  document.getElementById("open-apply").addEventListener("click", () => {
+    window.open(externalApplyUrl, "_blank", "noopener");
+  });
 
-  // Модалки
+  // Открытие модалок
   const complaintModal = document.getElementById("complaint-modal");
-  const complaintBtn = document.getElementById("complaint-btn");
   const eventModal = document.getElementById("event-modal");
-  const createEventBtn = document.getElementById("create-event-btn");
+  document.getElementById("complaint-btn").addEventListener("click", () => openModal(complaintModal));
+  document.getElementById("open-complaint").addEventListener("click", () => openModal(complaintModal));
+  document.getElementById("create-event-btn").addEventListener("click", () => openModal(eventModal));
 
-  // Имитация прав администратора: если в localStorage isAdmin=true — кнопка создания видна
-  const isAdmin = localStorage.getItem("FUNland_isAdmin") === "true";
-  toggleAdminControls(isAdmin);
+  document.querySelectorAll("[data-close]").forEach(btn => btn.addEventListener("click", (e) => {
+    const modal = e.currentTarget.closest(".modal");
+    closeModal(modal);
+  }));
+  document.querySelectorAll(".modal-close").forEach(btn => btn.addEventListener("click", (e) => {
+    const modal = e.currentTarget.closest(".modal");
+    closeModal(modal);
+  }));
 
-  createEventBtn.addEventListener("click", () => {
-    openModal(eventModal);
-  });
-
-  complaintBtn.addEventListener("click", () => openModal(complaintModal));
-
-  // Закрытие модалок по кнопке
-  document.querySelectorAll("[data-close]").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      const modal = e.currentTarget.closest(".modal");
-      closeModal(modal);
-    });
-  });
-  document.querySelectorAll(".modal-close").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      const modal = e.currentTarget.closest(".modal");
-      closeModal(modal);
-    });
-  });
-
-  // Закрытие по клику вне содержимого
   document.querySelectorAll(".modal").forEach(m => {
-    m.addEventListener("click", (e) => {
-      if (e.target === m) closeModal(m);
-    });
+    m.addEventListener("click", (e)=> { if(e.target === m) closeModal(m); });
   });
 
-  function openModal(modal){
-    modal.setAttribute("aria-hidden", "false");
-  }
-  function closeModal(modal){
-    if (!modal) return;
-    modal.setAttribute("aria-hidden", "true");
-    // сброс форм если есть
-    const form = modal.querySelector("form");
-    if (form) form.reset();
-    const fileList = modal.querySelector(".file-list");
-    if (fileList) fileList.innerHTML = "";
+  function openModal(modal){ if(!modal) return; modal.setAttribute("aria-hidden","false"); }
+  function closeModal(modal){ if(!modal) return; modal.setAttribute("aria-hidden","true"); const form = modal.querySelector("form"); if(form) form.reset(); const previews = modal.querySelector(".previews"); if(previews) previews.innerHTML = ""; }
+
+  // Файлы — превью для жалобы
+  const complaintFiles = document.getElementById("complaint-files");
+  const complaintPreviews = document.getElementById("complaint-previews");
+  if(complaintFiles){
+    complaintFiles.addEventListener("change", () => showPreviews(complaintFiles.files, complaintPreviews));
   }
 
-  // Обработка файлов в форме жалобы (показ имен)
-  const complaintFilesInput = document.getElementById("complaint-files");
-  const complaintFileList = document.getElementById("complaint-file-list");
-  complaintFilesInput.addEventListener("change", () => {
-    showFileList(complaintFilesInput.files, complaintFileList);
-  });
-
-  // Обработка формы жалобы
+  // Обработка формы жалобы (имитация)
   const complaintForm = document.getElementById("complaint-form");
   complaintForm.addEventListener("submit", (e) => {
     e.preventDefault();
     const fd = new FormData(complaintForm);
-    // Имитация отправки — в реальном проекте нужно отправлять на сервер
     const payload = {
       name: fd.get("name"),
       tg: fd.get("tg"),
       mc: fd.get("mc"),
       reason: fd.get("reason"),
-      files: Array.from(complaintFilesInput.files).map(f => ({name: f.name, size: f.size}))
+      files: Array.from(complaintFiles.files).map(f => ({name:f.name, size:f.size}))
     };
-    console.log("Жалоба отправлена (имитация):", payload);
-    alert("Жалоба отправлена. Спасибо! (Это имитация — интегрируйте сервер для реальной отправки).");
+    console.log("Жалоба (имитация) ->", payload);
+    alert("Жалоба принята (локально). Для реальной отправки подключите сервер/API.");
     closeModal(complaintModal);
   });
 
-  // Файлы для эвента
-  const eventFilesInput = document.getElementById("event-files");
-  const eventFileList = document.getElementById("event-file-list");
-  eventFilesInput.addEventListener("change", () => {
-    showFileList(eventFilesInput.files, eventFileList);
-  });
-  const eventExtrasInput = document.getElementById("event-extras");
-  eventExtrasInput.addEventListener("change", () => {
-    showFileList(eventExtrasInput.files, eventFileList, true);
-  });
+  // Эвенты — превью и создание
+  const eventFiles = document.getElementById("event-files");
+  const eventExtras = document.getElementById("event-extras");
+  const eventPreviews = document.getElementById("event-previews");
 
-  // Обработка создания эвента
+  if(eventFiles) eventFiles.addEventListener("change", ()=> showPreviews(eventFiles.files, eventPreviews));
+  if(eventExtras) eventExtras.addEventListener("change", ()=> showPreviews(eventExtras.files, eventPreviews, true));
+
   const eventForm = document.getElementById("event-form");
   eventForm.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -127,76 +101,95 @@ document.addEventListener("DOMContentLoaded", () => {
     const eventData = {
       title: fd.get("title"),
       description: fd.get("description"),
-      media: Array.from(eventFilesInput.files).map(f => ({name: f.name, size: f.size})),
-      extras: Array.from(eventExtrasInput.files).map(f => ({name: f.name, size: f.size}))
+      media: Array.from(eventFiles.files).map(f => ({name:f.name, size:f.size})),
+      extras: Array.from(eventExtras.files).map(f => ({name:f.name, size:f.size}))
     };
     addEventCard(eventData);
-    alert("Эвент создан (локально). Для хранения и публикации подключите сервер.");
+    alert("Эвент создан локально. Для публикации сохраните на сервер/БД.");
     closeModal(eventModal);
   });
 
-  // Показываем список файлов
-  function showFileList(fileList, container, append=false){
+  function showPreviews(files, container, append = false){
     if(!container) return;
     if(!append) container.innerHTML = "";
-    if(fileList.length === 0){
-      if(!append) container.innerHTML = "<span class='muted'>Файлы не выбраны.</span>";
-      return;
+    if(files.length === 0) { if(!append) container.innerHTML = "<div class='muted'>Файлы не выбраны.</div>"; return; }
+    for(const f of files){
+      const item = document.createElement("div");
+      item.className = "preview-item";
+      const name = document.createElement("div");
+      name.className = "preview-name";
+      name.textContent = f.name;
+      // если картинка — показать миниатюру
+      if(f.type.startsWith("image/")){
+        const img = document.createElement("img");
+        const url = URL.createObjectURL(f);
+        img.onload = ()=> URL.revokeObjectURL(url);
+        img.src = url;
+        item.appendChild(img);
+      } else if(f.type.startsWith("video/")){
+        const vid = document.createElement("video");
+        vid.src = URL.createObjectURL(f);
+        vid.controls = true;
+        vid.onloadeddata = ()=> URL.revokeObjectURL(vid.src);
+        item.appendChild(vid);
+      } else {
+        item.appendChild(name);
+      }
+      container.appendChild(item);
     }
-    const ul = document.createElement("ul");
-    for(const f of fileList){
-      const li = document.createElement("li");
-      li.textContent = `${f.name} (${Math.round(f.size/1024)} KB)`;
-      ul.appendChild(li);
-    }
-    container.appendChild(ul);
   }
 
-  // Добавление карточки эвента в список
+  // Добавление карточки эвента
   function addEventCard(eventData){
     const list = document.getElementById("events-list");
-    // удаляем muted сообщение
     const muted = list.querySelector(".muted");
     if(muted) muted.remove();
 
     const card = document.createElement("div");
     card.className = "event-card";
-    const title = document.createElement("h3");
-    title.textContent = eventData.title;
-    const desc = document.createElement("p");
-    desc.textContent = eventData.description;
-    const media = document.createElement("div");
-    media.className = "muted";
-    if(eventData.media.length) media.textContent = `Медиа (${eventData.media.length}): ` + eventData.media.map(m => m.name).join(", ");
+    const title = document.createElement("h3"); title.textContent = eventData.title;
+    const desc = document.createElement("p"); desc.textContent = eventData.description;
+    card.appendChild(title); card.appendChild(desc);
+
+    if(eventData.media.length){
+      const media = document.createElement("div"); media.className = "muted";
+      media.textContent = "Медиа: " + eventData.media.map(m => m.name).join(", ");
+      card.appendChild(media);
+    }
     if(eventData.extras.length){
-      const extras = document.createElement("div");
-      extras.className = "muted";
-      extras.textContent = `Доп. файлы (${eventData.extras.length}): ` + eventData.extras.map(m => m.name).join(", ");
+      const extras = document.createElement("div"); extras.className = "muted";
+      extras.textContent = "Доп. файлы: " + eventData.extras.map(m => m.name).join(", ");
       card.appendChild(extras);
     }
-    card.appendChild(title);
-    card.appendChild(desc);
-    if(eventData.media.length) card.appendChild(media);
+
     list.prepend(card);
   }
 
-  // Простая функция для включения/отключения админских элементов
+  // Админский режим (локально через localStorage)
+  const createEventBtn = document.getElementById("create-event-btn");
   function toggleAdminControls(isAdmin){
-    const createBtn = document.getElementById("create-event-btn");
-    if(isAdmin) createBtn.style.display = "inline-block";
-    else createBtn.style.display = "none";
+    if(isAdmin) createEventBtn.style.display = "inline-block";
+    else createEventBtn.style.display = "none";
   }
+  const isAdmin = localStorage.getItem("FUNland_isAdmin") === "true";
+  toggleAdminControls(isAdmin);
 
-  // --- Удобство: клавиша A включает/выключает локально режим админа (только для теста)
+  // Ctrl+A переключает режим админа (так же кнопка сверху)
   document.addEventListener("keydown", (e) => {
-    if(e.key.toLowerCase() === "a" && e.ctrlKey){
+    if(e.ctrlKey && e.key.toLowerCase() === "a"){
       const cur = localStorage.getItem("FUNland_isAdmin") === "true";
       localStorage.setItem("FUNland_isAdmin", (!cur).toString());
       toggleAdminControls(!cur);
       alert("Режим администратора: " + (!cur));
     }
   });
+  document.getElementById("btn-admin-toggle").addEventListener("click", ()=>{
+    const cur = localStorage.getItem("FUNland_isAdmin") === "true";
+    localStorage.setItem("FUNland_isAdmin", (!cur).toString());
+    toggleAdminControls(!cur);
+    alert("Режим администратора: " + (!cur));
+  });
 
-  // Инициализация: показываем главную
-  showPage("home");
+  // Показываем главную по умолчанию
+  navigateTo("home");
 });
