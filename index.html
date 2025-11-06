@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>FUNland</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand">
+      <!-- Можно заменить на свой логотип -->
+      <div class="logo">🎪</div>
+      <div class="title">FUNland</div>
+    </div>
+  </header>
+
+  <main id="app">
+    <!-- Главная -->
+    <section id="home" class="page active">
+      <h1>Добро пожаловать в FUNland!</h1>
+      <p>Здесь вы найдёте актуальную информацию, мероприятия и возможности подать заявки или жалобы.</p>
+      <div class="card">
+        <h3>Краткая информация</h3>
+        <p>FUNland — место для увлекательных событий и сообществ. Используйте навигацию внизу, чтобы перейти к нужному разделу.</p>
+      </div>
+    </section>
+
+    <!-- Информация -->
+    <section id="info" class="page">
+      <h1>Информация</h1>
+      <p>Здесь собрана вся важная информация о проекте, правилах и модах.</p>
+      <ul>
+        <li>Правила сообщества</li>
+        <li>FAQ</li>
+        <li>Ресурсы и модификации</li>
+      </ul>
+      <p>Скачать моды можно по ссылке на файлообменник:</p>
+      <a id="mods-link" href="https://example-filehost.com/mods" target="_blank" rel="noopener">Перейти на файлообменник и скачать моды</a>
+    </section>
+
+    <!-- Эвенты -->
+    <section id="events" class="page">
+      <div class="events-header">
+        <h1>Эвенты</h1>
+        <button id="create-event-btn" class="btn primary">Создать эвент</button>
+      </div>
+      <div id="events-list" class="events-list">
+        <!-- Здесь появятся созданные эвенты -->
+        <p class="muted">Эвенты пока не созданы.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Нижняя панель навигации -->
+  <nav class="bottom-nav" aria-label="Главная навигация">
+    <button class="nav-btn active" data-target="home">Главная</button>
+    <button class="nav-btn" data-target="info">Информация</button>
+    <button class="nav-btn" id="apply-btn">Подать заявку</button>
+    <button class="nav-btn" id="complaint-btn">Подать жалобу</button>
+    <button class="nav-btn" data-target="events">Эвенты</button>
+  </nav>
+
+  <!-- Модальное окно — Подать жалобу -->
+  <div id="complaint-modal" class="modal" aria-hidden="true">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="complaint-title">
+      <button class="modal-close" data-close>&times;</button>
+      <h2 id="complaint-title">Подать жалобу</h2>
+      <form id="complaint-form">
+        <label>Свое имя
+          <input type="text" name="name" required />
+        </label>
+        <label>Юзернейм в Telegram
+          <input type="text" name="tg" placeholder="@username" required />
+        </label>
+        <label>Юзернейм в Minecraft
+          <input type="text" name="mc" placeholder="nickname" required />
+        </label>
+        <label>Причина жалобы
+          <textarea name="reason" rows="4" required></textarea>
+        </label>
+        <label>Доказательства (фото/видео) — можно выбрать несколько
+          <input type="file" name="evidence" id="complaint-files" accept="image/*,video/*" multiple />
+        </label>
+
+        <div class="file-list" id="complaint-file-list" aria-live="polite"></div>
+
+        <div class="modal-actions">
+          <button type="submit" class="btn primary">Отправить жалобу</button>
+          <button type="button" class="btn" data-close>Отмена</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Модальное окно — Создать эвент -->
+  <div id="event-modal" class="modal" aria-hidden="true">
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="event-title">
+      <button class="modal-close" data-close>&times;</button>
+      <h2 id="event-title">Создать эвент</h2>
+      <form id="event-form">
+        <label>Имя эвента
+          <input type="text" name="title" required />
+        </label>
+        <label>Описание
+          <textarea name="description" rows="4" required></textarea>
+        </label>
+        <label>Фотографии / Видео
+          <input type="file" name="media" id="event-files" accept="image/*,video/*" multiple />
+        </label>
+        <label>Дополнительные файлы (необязательно)
+          <input type="file" name="extras" id="event-extras" multiple />
+        </label>
+
+        <div class="file-list" id="event-file-list" aria-live="polite"></div>
+
+        <div class="modal-actions">
+          <button type="submit" class="btn primary">Создать</button>
+          <button type="button" class="btn" data-close>Отмена</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
